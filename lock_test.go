@@ -1,7 +1,7 @@
 package muxtracer_test
 
 import (
-	sync "../golang-mutex-tracer"
+	sync "github.com/lukemarsden/golang-mutex-tracer"
 	nativeSync "sync"
 	"testing"
 	"time"
