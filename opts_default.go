@@ -8,7 +8,7 @@ import (
 
 var defaultGlobalOpts Opts
 var defaultGlobalOptsMux sync.RWMutex
-var defaultThreshold uint64
+var defaultThreshold atomic.Uint64
 
 func obtainGlobalOpts() Opts {
 	defaultGlobalOptsMux.RLock()
@@ -27,7 +27,7 @@ func SetGlobalOpts(o Opts) {
 	}
 	defaultGlobalOptsMux.Lock()
 	defaultGlobalOpts = o
-	atomic.StoreUint64(&defaultThreshold, uint64(o.Threshold))
+	defaultThreshold.Store(uint64(o.Threshold))
 	defaultGlobalOptsMux.Unlock()
 }
 

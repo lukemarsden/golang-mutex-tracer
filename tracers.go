@@ -2,7 +2,6 @@ package muxtracer
 
 import (
 	"log"
-	"sync/atomic"
 	"time"
 )
 
@@ -32,11 +31,11 @@ func (m *Mutex) EnableTracerWithOpts(o Opts) {
 	if o.Id != "" {
 		m.id = []byte(o.Id)
 	}
-	atomic.StoreUint64(&m.threshold, uint64(o.Threshold.Nanoseconds()))
+	m.threshold.Store(uint64(o.Threshold.Nanoseconds()))
 }
 
 func (m *Mutex) DisableTracer() {
-	atomic.StoreUint64(&m.threshold, 0)
+	m.threshold.Store(0)
 }
 
 func (m *RWMutex) EnableTracer() {
@@ -47,11 +46,11 @@ func (m *RWMutex) EnableTracerWithOpts(o Opts) {
 	if o.Id != "" {
 		m.id = []byte(o.Id)
 	}
-	atomic.StoreUint64(&m.threshold, uint64(o.Threshold.Nanoseconds()))
+	m.threshold.Store(uint64(o.Threshold.Nanoseconds()))
 }
 
 func (m *RWMutex) DisableTracer() {
-	atomic.StoreUint64(&m.threshold, 0)
+	m.threshold.Store(0)
 }
 
 type Id []byte
