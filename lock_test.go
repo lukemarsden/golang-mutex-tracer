@@ -1,8 +1,7 @@
-package muxtracer_test
+package muxtracer
 
 import (
-	sync "github.com/lukemarsden/golang-mutex-tracer"
-	nativeSync "sync"
+	"sync"
 	"testing"
 	"time"
 )
@@ -10,27 +9,27 @@ import (
 const numRoutines = 16
 
 func TestNew(t *testing.T) {
-	l := sync.Mutex{}
+	l := Mutex{}
 	l.Lock()
 	l.Unlock()
 }
 
 func TestNewEnabled(t *testing.T) {
-	l := sync.Mutex{}
+	l := Mutex{}
 	l.EnableTracer()
 	l.Lock()
 	l.Unlock()
 }
 
 func TestNewDisabled(t *testing.T) {
-	l := sync.Mutex{}
+	l := Mutex{}
 	l.DisableTracer()
 	l.Lock()
 	l.Unlock()
 }
 
 func TestNewEnabledDisabledHalfWay(t *testing.T) {
-	l := sync.Mutex{}
+	l := Mutex{}
 	l.EnableTracer()
 	l.Lock()
 	l.DisableTracer()
@@ -38,7 +37,7 @@ func TestNewEnabledDisabledHalfWay(t *testing.T) {
 }
 
 func TestNewEnabledDisabledEnd(t *testing.T) {
-	l := sync.Mutex{}
+	l := Mutex{}
 	l.EnableTracer()
 	l.Lock()
 	l.Unlock()
@@ -46,10 +45,10 @@ func TestNewEnabledDisabledEnd(t *testing.T) {
 }
 
 func TestNewEnableGlobal(t *testing.T) {
-	l := sync.Mutex{}
+	l := Mutex{}
 
 	// enable globally
-	sync.SetGlobalOpts(sync.Opts{
+	SetGlobalOpts(Opts{
 		Threshold: 100 * time.Millisecond,
 		Enabled:   true,
 	})
@@ -59,11 +58,11 @@ func TestNewEnableGlobal(t *testing.T) {
 	l.Unlock()
 
 	// reset again
-	sync.ResetDefaults()
+	ResetDefaults()
 }
 
 func TestNewEnabledHalfWay(t *testing.T) {
-	l := sync.Mutex{}
+	l := Mutex{}
 	l.Lock()
 	l.EnableTracer()
 	l.Unlock()
@@ -71,7 +70,7 @@ func TestNewEnabledHalfWay(t *testing.T) {
 }
 
 func TestNewEnabledShortDelay(t *testing.T) {
-	l := sync.Mutex{}
+	l := Mutex{}
 	l.EnableTracer()
 	l.Lock()
 	time.Sleep(1 * time.Millisecond)
@@ -80,7 +79,7 @@ func TestNewEnabledShortDelay(t *testing.T) {
 }
 
 func TestNewEnabledLongDelay(t *testing.T) {
-	l := sync.Mutex{}
+	l := Mutex{}
 	l.EnableTracer()
 	l.Lock()
 	time.Sleep(150 * time.Millisecond)
@@ -89,8 +88,8 @@ func TestNewEnabledLongDelay(t *testing.T) {
 }
 
 func TestNewEnabledAwaitLock(t *testing.T) {
-	l := sync.Mutex{}
-	l.EnableTracerWithOpts(sync.Opts{
+	l := Mutex{}
+	l.EnableTracerWithOpts(Opts{
 		Threshold: 10 * time.Millisecond,
 	})
 	go func() {
@@ -106,8 +105,8 @@ func TestNewEnabledAwaitLock(t *testing.T) {
 }
 
 func TestNewEnabledId(t *testing.T) {
-	l := sync.Mutex{}
-	l.EnableTracerWithOpts(sync.Opts{
+	l := Mutex{}
+	l.EnableTracerWithOpts(Opts{
 		Threshold: 10 * time.Millisecond,
 		Id:        "testLock",
 	})
@@ -118,7 +117,7 @@ func TestNewEnabledId(t *testing.T) {
 }
 
 func BenchmarkNativeLock(b *testing.B) {
-	l := nativeSync.Mutex{}
+	l := sync.Mutex{}
 	for n := 0; n < b.N; n++ {
 		l.Lock()
 		l.Unlock()
@@ -126,7 +125,7 @@ func BenchmarkNativeLock(b *testing.B) {
 }
 
 func BenchmarkTracerLockDisabled(b *testing.B) {
-	l := sync.Mutex{}
+	l := Mutex{}
 	for n := 0; n < b.N; n++ {
 		l.Lock()
 		l.Unlock()
@@ -134,7 +133,7 @@ func BenchmarkTracerLockDisabled(b *testing.B) {
 }
 
 func BenchmarkTracerLockEnabled(b *testing.B) {
-	l := sync.Mutex{}
+	l := Mutex{}
 	l.EnableTracer()
 	for n := 0; n < b.N; n++ {
 		l.Lock()
@@ -143,8 +142,8 @@ func BenchmarkTracerLockEnabled(b *testing.B) {
 }
 
 func BenchmarkNativeLockWithConcurrency(b *testing.B) {
-	l := nativeSync.Mutex{}
-	wg := nativeSync.WaitGroup{}
+	l := sync.Mutex{}
+	wg := sync.WaitGroup{}
 	wg.Add(numRoutines)
 	for i := 0; i < numRoutines; i++ {
 		go func() {
@@ -159,8 +158,8 @@ func BenchmarkNativeLockWithConcurrency(b *testing.B) {
 }
 
 func BenchmarkTracerLockDisabledWithConcurrency(b *testing.B) {
-	l := sync.Mutex{}
-	wg := nativeSync.WaitGroup{}
+	l := Mutex{}
+	wg := sync.WaitGroup{}
 	wg.Add(numRoutines)
 	for i := 0; i < numRoutines; i++ {
 		go func() {
@@ -175,9 +174,9 @@ func BenchmarkTracerLockDisabledWithConcurrency(b *testing.B) {
 }
 
 func BenchmarkTracerLockEnabledWithConcurrency(b *testing.B) {
-	l := sync.Mutex{}
+	l := Mutex{}
 	l.EnableTracer()
-	wg := nativeSync.WaitGroup{}
+	wg := sync.WaitGroup{}
 	wg.Add(numRoutines)
 	for i := 0; i < numRoutines; i++ {
 		go func() {

@@ -9,11 +9,11 @@ type Mutex struct {
 	lock sync.Mutex
 
 	// internal trace fields
-	threshold        uint64 // 0 when disabled, else threshold in nanoseconds
-	beginAwaitLock   uint64 // start time in unix nanoseconds from start waiting for lock
-	beginAwaitUnlock uint64 // start time in unix nanoseconds from start waiting for unlock
-	lockObtained     uint64 // once we've entered the lock in unix nanoseconds
-	id               []byte // if set this will be printed as string
+	threshold        atomic.Uint64 // 0 when disabled, else threshold in nanoseconds
+	beginAwaitLock   atomic.Uint64 // start time in unix nanoseconds from start waiting for lock
+	beginAwaitUnlock atomic.Uint64 // start time in unix nanoseconds from start waiting for unlock
+	lockObtained     atomic.Uint64 // once we've entered the lock in unix nanoseconds
+	id               []byte        // if set this will be printed as string
 }
 
 func (m *Mutex) Lock() {
@@ -45,22 +45,22 @@ func (m *Mutex) Unlock() {
 }
 
 func (m *Mutex) isTracing() Threshold {
-	tracingThreshold := atomic.LoadUint64(&m.threshold)
+	tracingThreshold := m.threshold.Load()
 	if tracingThreshold == 0 {
 		// always on?
-		tracingThreshold = atomic.LoadUint64(&defaultThreshold)
+		tracingThreshold = defaultThreshold.Load()
 	}
 	return Threshold(tracingThreshold)
 }
 
 func (m *Mutex) traceBeginAwaitLock() {
-	atomic.StoreUint64(&m.beginAwaitLock, now())
+	m.beginAwaitLock.Store(now())
 }
 
 func (m *Mutex) traceEndAwaitLock(threshold Threshold) {
 	ts := now() // first obtain the current time
-	start := atomic.LoadUint64(&m.beginAwaitLock)
-	atomic.StoreUint64(&m.lockObtained, uint64(ts))
+	start := m.beginAwaitLock.Load()
+	m.lockObtained.Store(ts)
 	var took uint64
 	if start < ts {
 		// check for no overflow
@@ -72,14 +72,14 @@ func (m *Mutex) traceEndAwaitLock(threshold Threshold) {
 }
 
 func (m *Mutex) traceBeginAwaitUnlock() {
-	atomic.StoreUint64(&m.beginAwaitUnlock, now())
+	m.beginAwaitUnlock.Store(now())
 }
 
 func (m *Mutex) traceEndAwaitUnlock(threshold Threshold) {
 	ts := now() // first obtain the current time
 
 	// lock obtained time (critical section)
-	lockObtained := atomic.LoadUint64(&m.lockObtained)
+	lockObtained := m.lockObtained.Load()
 	var took uint64
 	if lockObtained < ts {
 		// check for no overflow
