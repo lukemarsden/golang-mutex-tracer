@@ -1,34 +1,33 @@
-package muxtracer_test
+package muxtracer
 
 import (
-	sync "github.com/lukemarsden/golang-mutex-tracer"
-	nativeSync "sync"
+	"sync"
 	"testing"
 	"time"
 )
 
 func TestRWNew(t *testing.T) {
-	l := sync.RWMutex{}
+	l := RWMutex{}
 	l.Lock()
 	l.Unlock()
 }
 
 func TestRWNewEnabled(t *testing.T) {
-	l := sync.RWMutex{}
+	l := RWMutex{}
 	l.EnableTracer()
 	l.Lock()
 	l.Unlock()
 }
 
 func TestRWNewDisabled(t *testing.T) {
-	l := sync.RWMutex{}
+	l := RWMutex{}
 	l.DisableTracer()
 	l.Lock()
 	l.Unlock()
 }
 
 func TestRWNewEnabledDisabledHalfWay(t *testing.T) {
-	l := sync.RWMutex{}
+	l := RWMutex{}
 	l.EnableTracer()
 	l.Lock()
 	l.DisableTracer()
@@ -36,7 +35,7 @@ func TestRWNewEnabledDisabledHalfWay(t *testing.T) {
 }
 
 func TestRWNewEnabledDisabledEnd(t *testing.T) {
-	l := sync.RWMutex{}
+	l := RWMutex{}
 	l.EnableTracer()
 	l.Lock()
 	l.Unlock()
@@ -44,10 +43,10 @@ func TestRWNewEnabledDisabledEnd(t *testing.T) {
 }
 
 func TestRWNewEnableGlobal(t *testing.T) {
-	l := sync.RWMutex{}
+	l := RWMutex{}
 
 	// enable globally
-	sync.SetGlobalOpts(sync.Opts{
+	SetGlobalOpts(Opts{
 		Threshold: 100 * time.Millisecond,
 		Enabled:   true,
 	})
@@ -57,11 +56,11 @@ func TestRWNewEnableGlobal(t *testing.T) {
 	l.Unlock()
 
 	// reset again
-	sync.ResetDefaults()
+	ResetDefaults()
 }
 
 func TestRWNewEnabledHalfWay(t *testing.T) {
-	l := sync.RWMutex{}
+	l := RWMutex{}
 	l.Lock()
 	l.EnableTracer()
 	l.Unlock()
@@ -69,7 +68,7 @@ func TestRWNewEnabledHalfWay(t *testing.T) {
 }
 
 func TestRWNewEnabledShortDelay(t *testing.T) {
-	l := sync.RWMutex{}
+	l := RWMutex{}
 	l.EnableTracer()
 	l.Lock()
 	time.Sleep(1 * time.Millisecond)
@@ -78,7 +77,7 @@ func TestRWNewEnabledShortDelay(t *testing.T) {
 }
 
 func TestRWNewEnabledLongDelay(t *testing.T) {
-	l := sync.RWMutex{}
+	l := RWMutex{}
 	l.EnableTracer()
 	l.Lock()
 	time.Sleep(150 * time.Millisecond)
@@ -87,8 +86,8 @@ func TestRWNewEnabledLongDelay(t *testing.T) {
 }
 
 func TestRWNewEnabledAwaitLock(t *testing.T) {
-	l := sync.RWMutex{}
-	l.EnableTracerWithOpts(sync.Opts{
+	l := RWMutex{}
+	l.EnableTracerWithOpts(Opts{
 		Threshold: 10 * time.Millisecond,
 	})
 	go func() {
@@ -104,8 +103,8 @@ func TestRWNewEnabledAwaitLock(t *testing.T) {
 }
 
 func TestRWNewEnabledId(t *testing.T) {
-	l := sync.Mutex{}
-	l.EnableTracerWithOpts(sync.Opts{
+	l := Mutex{}
+	l.EnableTracerWithOpts(Opts{
 		Threshold: 10 * time.Millisecond,
 		Id:        "testRwLock",
 	})
@@ -116,7 +115,7 @@ func TestRWNewEnabledId(t *testing.T) {
 }
 
 func BenchmarkRWNativeLock(b *testing.B) {
-	l := sync.RWMutex{}
+	l := RWMutex{}
 	for n := 0; n < b.N; n++ {
 		l.Lock()
 		l.Unlock()
@@ -124,7 +123,7 @@ func BenchmarkRWNativeLock(b *testing.B) {
 }
 
 func BenchmarkRWTracerLockDisabled(b *testing.B) {
-	l := sync.RWMutex{}
+	l := RWMutex{}
 	for n := 0; n < b.N; n++ {
 		l.Lock()
 		l.Unlock()
@@ -132,7 +131,7 @@ func BenchmarkRWTracerLockDisabled(b *testing.B) {
 }
 
 func BenchmarkRWTracerLockEnabled(b *testing.B) {
-	l := sync.RWMutex{}
+	l := RWMutex{}
 	l.EnableTracer()
 	for n := 0; n < b.N; n++ {
 		l.Lock()
@@ -141,8 +140,8 @@ func BenchmarkRWTracerLockEnabled(b *testing.B) {
 }
 
 func BenchmarkRWNativeLockWithConcurrency(b *testing.B) {
-	l := sync.RWMutex{}
-	wg := nativeSync.WaitGroup{}
+	l := RWMutex{}
+	wg := sync.WaitGroup{}
 	wg.Add(numRoutines)
 	for i := 0; i < numRoutines; i++ {
 		go func() {
@@ -157,8 +156,8 @@ func BenchmarkRWNativeLockWithConcurrency(b *testing.B) {
 }
 
 func BenchmarkRWTracerLockDisabledWithConcurrency(b *testing.B) {
-	l := sync.RWMutex{}
-	wg := nativeSync.WaitGroup{}
+	l := RWMutex{}
+	wg := sync.WaitGroup{}
 	wg.Add(numRoutines)
 	for i := 0; i < numRoutines; i++ {
 		go func() {
@@ -173,9 +172,9 @@ func BenchmarkRWTracerLockDisabledWithConcurrency(b *testing.B) {
 }
 
 func BenchmarkRWTracerLockEnabledWithConcurrency(b *testing.B) {
-	l := sync.RWMutex{}
+	l := RWMutex{}
 	l.EnableTracer()
-	wg := nativeSync.WaitGroup{}
+	wg := sync.WaitGroup{}
 	wg.Add(numRoutines)
 	for i := 0; i < numRoutines; i++ {
 		go func() {
